@@ -1,14 +1,22 @@
 const canvas = document.getElementById("myCanvas");
 const ctx = canvas.getContext("2d");
 
-// Variables del juego
+// Configuración del juego
 let lastTime = 0;
 let menuActive = true;
-let cameraOffset = { x: 0, y: 0 };
-let fps = 0;
-let lastFpsUpdate = 0;
-let frameCount = 0;
 let score = 0;
+let frameCount = 0;
+let lastFpsUpdate = 0;
+let fps = 0;
+
+// Sistema de cámara
+let cameraOffset = { x: 0, y: 0 };
+const cameraSettings = {
+    offsetX: 150,
+    smoothSpeed: 4
+};
+
+// Fondo
 let bgOffset = 0;
 const bgSpeed = 30;
 
@@ -24,42 +32,43 @@ function gameLoop(timestamp) {
     const deltaTime = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
 
-    // Actualizar
+    // Actualizar elementos del juego
     player.update(deltaTime);
-    cameraOffset.x = player.x - 100;
-    score = Math.floor(player.x / 100);
+    walls.update(deltaTime);
+    walls.checkCollision();
+    
+    // Actualizar cámara (movimiento suavizado)
+    cameraOffset.x += ((player.x - cameraSettings.offsetX) - cameraOffset.x) * 
+                     cameraSettings.smoothSpeed * deltaTime;
+    
+    // Actualizar fondo
     bgOffset = (bgOffset + bgSpeed * deltaTime) % canvas.width;
+    
+    // Actualizar puntuación
+    score = Math.floor(player.x / 100);
 
     // Dibujar
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Fondo infinito con patrones
     drawBackground(bgOffset);
     
-    // Aplicar cámara
+    // Dibujar mundo (con transformación de cámara)
     ctx.save();
-    ctx.translate(-cameraOffset.x, 0);
+    ctx.translate(-Math.floor(cameraOffset.x), 0);
     
-    // Líneas de referencia
-    ctx.fillStyle = "#4a4a8a";
-    ctx.fillRect(0, 0, cameraOffset.x + canvas.width * 2, 5); // Techo
-    ctx.fillRect(0, canvas.height - 5, cameraOffset.x + canvas.width * 2, 5); // Suelo
-    
-    // Jugador
+    walls.draw();
     player.draw();
     
     ctx.restore();
     
-    // HUD (esquina superior derecha)
+    // Dibujar HUD
     drawHUD();
     
     requestAnimationFrame(gameLoop);
 }
 
 function drawBackground(offset) {
-    // Patrón de fondo infinito
-    const bgPattern1 = "#1a1a2e";
-    const bgPattern2 = "#252547";
+    const bgPattern1 = "#0f0f23";
+    const bgPattern2 = "#1a1a3a";
     const segmentWidth = 80;
     
     for (let x = -offset; x < canvas.width; x += segmentWidth * 2) {
@@ -71,27 +80,23 @@ function drawBackground(offset) {
 }
 
 function drawHUD() {
-    // Fondo semitransparente para el HUD
+    // Panel de información
     ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-    ctx.fillRect(canvas.width - 150, 10, 140, 45);
+    ctx.fillRect(canvas.width - 150, 10, 140, 50);
     
-    // Texto del HUD
+    // Texto
     ctx.fillStyle = "white";
     ctx.font = "12px 'Press Start 2P'";
     ctx.textAlign = "right";
-    
-    // FPS
     ctx.fillText(`FPS: ${fps}`, canvas.width - 20, 30);
-    
-    // Puntuación
     ctx.fillText(`PTS: ${score}`, canvas.width - 20, 50);
 }
-
 
 function startGame() {
     menuActive = false;
     score = 0;
     player.reset();
+    walls.init();
     cameraOffset = { x: 0, y: 0 };
     lastTime = performance.now();
     lastFpsUpdate = performance.now();
