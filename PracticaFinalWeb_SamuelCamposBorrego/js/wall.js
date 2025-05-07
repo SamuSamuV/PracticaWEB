@@ -1,15 +1,15 @@
 const walls = {
     list: [],
     width: 60,
-    spacing: 300, // Espacio entre paredes
+    spacing: 300,
     speed: 180,
     nextWallX: 0,
-    lastPosition: 'bottom', // 'top' o 'bottom'
+    lastPosition: 'bottom',
 
     init: function() {
         this.list = [];
         this.nextWallX = canvas.width;
-        this.lastPosition = 'bottom'; // Empieza con pared abajo
+        this.lastPosition = 'bottom';
     },
 
     update: function(deltaTime) {
@@ -18,21 +18,28 @@ const walls = {
             wall.x -= this.speed * deltaTime;
         });
 
-        // Eliminar paredes fuera de pantalla
+        // Eliminar fuera de pantalla
         this.list = this.list.filter(wall => wall.x + this.width > -this.width);
 
-        // Generar nuevas paredes
+        // Dificultad progresiva
+        const difficulty = Math.min(1, player.currentSpeed / player.baseSpeed);
+        this.spacing = 300 - (difficulty * 100);
+
+        // Generar nuevas
         if (this.nextWallX - player.x < canvas.width * 1.5) {
             this.generateWall();
         }
     },
 
     generateWall: function() {
-        // Alternar posición (arriba/abajo)
-        const position = this.lastPosition === 'top' ? 'bottom' : 'top';
+        const position = Math.random() > 0.7 ? 
+                       (this.lastPosition === 'top' ? 'bottom' : 'top') : 
+                       this.lastPosition;
         this.lastPosition = position;
 
-        const wallHeight = canvas.height / 2; // Media pantalla de altura
+        const minHeight = canvas.height * 0.3;
+        const maxHeight = canvas.height * 0.7;
+        const wallHeight = Math.random() * (maxHeight - minHeight) + minHeight;
 
         this.list.push({
             x: this.nextWallX,
@@ -45,15 +52,14 @@ const walls = {
     },
 
     draw: function() {
-        ctx.fillStyle = "#4AF"; // Azul
-        ctx.strokeStyle = "#FFF"; // Borde blanco
+        ctx.fillStyle = "#4AF";
+        ctx.strokeStyle = "#FFF";
         ctx.lineWidth = 2;
         
         this.list.forEach(wall => {
             ctx.fillRect(wall.x, wall.y, this.width, wall.height);
             ctx.strokeRect(wall.x, wall.y, this.width, wall.height);
             
-            // Dibujar patrón en la pared
             ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
             for (let y = wall.y + 10; y < wall.y + wall.height; y += 20) {
                 ctx.fillRect(wall.x + 5, y, this.width - 10, 10);
@@ -82,7 +88,7 @@ const walls = {
 function gameOver() {
     player.die();
     setTimeout(() => {
-        alert(`¡Has chocado! Puntuación: ${score}`);
+        alert(`¡Game Over! Puntuación: ${score}`);
         startGame();
     }, 300);
 }

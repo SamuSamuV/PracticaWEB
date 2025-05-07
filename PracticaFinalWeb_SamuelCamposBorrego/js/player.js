@@ -1,49 +1,80 @@
+const playerSprite = new Image();
+playerSprite.src = "sprites/Character_Anim.png";
+
 const player = {
     x: 100,
-    y: canvas.height - 70, // Posición inicial abajo
-    width: 40,
-    height: 40,
-    speed: 180,
+    y: canvas.height - 70,
+    width: 75,
+    height: 75,
+    baseSpeed: 180,
+    currentSpeed: 180,
+    speedIncrement: 5,
     isOnTop: false,
     isAlive: true,
 
+    
     reset: function() {
         this.x = 100;
         this.y = canvas.height - 70;
+        this.currentSpeed = this.baseSpeed;
         this.isOnTop = false;
         this.isAlive = true;
     },
 
     update: function(deltaTime) {
         if (!this.isAlive) return;
-        this.x += this.speed * deltaTime;
+        this.currentSpeed += this.speedIncrement * deltaTime;
+        this.x += this.currentSpeed * deltaTime;
     },
 
-    draw: function() {
+    draw: function(deltaTime) {
         if (!this.isAlive) return;
-        
-        // Cuerpo del jugador
-        ctx.fillStyle = "#FF3355";
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-        
-        // Ojos (orientación diferente según posición)
-        ctx.fillStyle = "#FFFFFF";
-        const eyeY = this.isOnTop ? this.y + 25 : this.y + 10;
-        ctx.fillRect(this.x + 10, eyeY, 8, 8);
-        ctx.fillRect(this.x + 22, eyeY, 8, 8);
+    
+        // Animación de frame
+        frameTimer += deltaTime * 1000; // deltaTime en ms
+        if (frameTimer >= FRAME_DURATION) {
+            frameTimer = 0;
+            currentFrame = (currentFrame + 1) % TOTAL_FRAMES;
+        }
+    
+        const col = currentFrame % SPRITE_COLS;
+        const row = Math.floor(currentFrame / SPRITE_COLS);
+    
+        ctx.save();
+    
+        if (this.isOnTop) {
+            // Voltear horizontalmente (espejo)
+            ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
+            ctx.scale(-1, 1);
+            ctx.translate(-this.width / 2, -this.height / 2);
+    
+            ctx.drawImage(
+                playerSprite,
+                col * FRAME_WIDTH, row * FRAME_HEIGHT,
+                FRAME_WIDTH, FRAME_HEIGHT,
+                0, 0,
+                this.width, this.height
+            );
+        } else {
+            ctx.drawImage(
+                playerSprite,
+                col * FRAME_WIDTH, row * FRAME_HEIGHT,
+                FRAME_WIDTH, FRAME_HEIGHT,
+                this.x, this.y,
+                this.width, this.height
+            );
+        }
+    
+        ctx.restore();
     },
-
+        
     jump: function() {
         if (!this.isAlive) return;
         
         this.isOnTop = !this.isOnTop;
-        // Posiciones ajustadas para esquivar paredes
-        this.y = this.isOnTop ? 30 : canvas.height - this.height - 30;
+        this.y = this.isOnTop ? 0 : canvas.height - this.height - 0;
+
         
-        // Pequeño efecto visual
-        ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
-        ctx.fillRect(this.x - 5, this.isOnTop ? this.y + this.height : this.y - 5, 
-                    this.width + 10, 5);
     },
 
     getBounds: function() {
@@ -57,15 +88,22 @@ const player = {
 
     die: function() {
         this.isAlive = false;
-        // Efecto visual de explosión
         ctx.fillStyle = "rgba(255, 50, 50, 0.7)";
         ctx.fillRect(this.x - 15, this.y - 15, this.width + 30, this.height + 30);
     }
 };
 
-// Controles
 document.addEventListener("keydown", function(e) {
     if (e.code === "Space" && !menuActive) {
         player.jump();
     }
 });
+
+const SPRITE_COLS = 5;
+const SPRITE_ROWS = 2;
+const FRAME_WIDTH = 280;
+const FRAME_HEIGHT = 385;
+const TOTAL_FRAMES = SPRITE_COLS * SPRITE_ROWS;
+let currentFrame = 0;
+let frameTimer = 0;
+const FRAME_DURATION = 100;

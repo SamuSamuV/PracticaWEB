@@ -9,11 +9,11 @@ let frameCount = 0;
 let lastFpsUpdate = 0;
 let fps = 0;
 
-// Sistema de cámara
+// Sistema de cámara mejorado
 let cameraOffset = { x: 0, y: 0 };
 const cameraSettings = {
-    offsetX: 150,
-    smoothSpeed: 4
+    offsetX: 150, // Distancia al borde izquierdo
+    followSharpness: 0.15 // 0 = sin seguir, 1 = instantáneo
 };
 
 // Fondo
@@ -21,7 +21,6 @@ let bgOffset = 0;
 const bgSpeed = 30;
 
 function gameLoop(timestamp) {
-    // Calcular FPS
     frameCount++;
     if (timestamp - lastFpsUpdate >= 1000) {
         fps = frameCount;
@@ -29,38 +28,38 @@ function gameLoop(timestamp) {
         lastFpsUpdate = timestamp;
     }
     
-    const deltaTime = (timestamp - lastTime) / 1000;
+    const deltaTime = Math.min(0.1, (timestamp - lastTime) / 1000);
     lastTime = timestamp;
 
-    // Actualizar elementos del juego
+    // Actualizar elementos
     player.update(deltaTime);
+    walls.speed = player.currentSpeed;
     walls.update(deltaTime);
     walls.checkCollision();
     
-    // Actualizar cámara (movimiento suavizado)
-    cameraOffset.x += ((player.x - cameraSettings.offsetX) - cameraOffset.x) * 
-                     cameraSettings.smoothSpeed * deltaTime;
+    const targetX = player.x - cameraSettings.offsetX;
+    cameraOffset.x += (targetX - cameraOffset.x) * cameraSettings.followSharpness;
     
-    // Actualizar fondo
+    // Fondo
     bgOffset = (bgOffset + bgSpeed * deltaTime) % canvas.width;
     
-    // Actualizar puntuación
+    // Puntuación
     score = Math.floor(player.x / 100);
 
     // Dibujar
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawBackground(bgOffset);
     
-    // Dibujar mundo (con transformación de cámara)
+    // Mundo con cámara
     ctx.save();
     ctx.translate(-Math.floor(cameraOffset.x), 0);
     
     walls.draw();
-    player.draw();
+    player.draw(deltaTime);
     
     ctx.restore();
     
-    // Dibujar HUD
+    // HUD
     drawHUD();
     
     requestAnimationFrame(gameLoop);
@@ -80,11 +79,9 @@ function drawBackground(offset) {
 }
 
 function drawHUD() {
-    // Panel de información
     ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
     ctx.fillRect(canvas.width - 150, 10, 140, 50);
     
-    // Texto
     ctx.fillStyle = "white";
     ctx.font = "12px 'Press Start 2P'";
     ctx.textAlign = "right";
@@ -97,7 +94,7 @@ function startGame() {
     score = 0;
     player.reset();
     walls.init();
-    cameraOffset = { x: 0, y: 0 };
+    cameraOffset = { x: player.x - cameraSettings.offsetX, y: 0 }; // Reset cámara
     lastTime = performance.now();
     lastFpsUpdate = performance.now();
     requestAnimationFrame(gameLoop);
