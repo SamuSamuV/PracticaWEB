@@ -14,7 +14,7 @@ const player = {
 
     
     reset: function() {
-        this.x = 100;
+        this.x = 100; // Posición inicial fija
         this.y = canvas.height - 70;
         this.currentSpeed = this.baseSpeed;
         this.isOnTop = false;
@@ -29,42 +29,40 @@ const player = {
 
     draw: function(deltaTime) {
         if (!this.isAlive) return;
-    
+
         // Animación de frame
-        frameTimer += deltaTime * 1000; // deltaTime en ms
+        frameTimer += deltaTime * 1000;
         if (frameTimer >= FRAME_DURATION) {
             frameTimer = 0;
             currentFrame = (currentFrame + 1) % TOTAL_FRAMES;
         }
-    
+
         const col = currentFrame % SPRITE_COLS;
         const row = Math.floor(currentFrame / SPRITE_COLS);
-    
+
         ctx.save();
-    
+
+        // Centro del sprite
+        const centerX = this.x + this.width / 2;
+        const centerY = this.y + this.height / 2;
+
+        // Mover origen al centro
+        ctx.translate(centerX, centerY);
+
         if (this.isOnTop) {
-            // Voltear horizontalmente (espejo)
-            ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
-            ctx.scale(-1, 1);
-            ctx.translate(-this.width / 2, -this.height / 2);
-    
-            ctx.drawImage(
-                playerSprite,
-                col * FRAME_WIDTH, row * FRAME_HEIGHT,
-                FRAME_WIDTH, FRAME_HEIGHT,
-                0, 0,
-                this.width, this.height
-            );
-        } else {
-            ctx.drawImage(
-                playerSprite,
-                col * FRAME_WIDTH, row * FRAME_HEIGHT,
-                FRAME_WIDTH, FRAME_HEIGHT,
-                this.x, this.y,
-                this.width, this.height
-            );
+            // Solo giro 180º (volteo vertical)
+            ctx.scale(1, -1);
         }
-    
+
+        // Dibujo desde el centro corregido
+        ctx.drawImage(
+            playerSprite,
+            col * FRAME_WIDTH, row * FRAME_HEIGHT,
+            FRAME_WIDTH, FRAME_HEIGHT,
+            -this.width / 2, -this.height / 2,
+            this.width, this.height
+        );
+
         ctx.restore();
     },
         

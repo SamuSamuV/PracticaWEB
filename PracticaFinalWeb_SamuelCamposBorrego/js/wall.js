@@ -87,8 +87,12 @@ const walls = {
 
 function gameOver() {
     player.die();
+    isGamePaused = true;
+
     setTimeout(() => {
         alert(`¡Game Over! Puntuación: ${score}`);
-        startGame();
+        isGamePaused = false;
+        menuActive = true; // Volver al menú
+        loopMenu(); // Mostrar el menú principal
     }, 300);
 }

@@ -8,6 +8,7 @@ let score = 0;
 let frameCount = 0;
 let lastFpsUpdate = 0;
 let fps = 0;
+let isGamePaused = false;
 
 // Sistema de cámara mejorado
 let cameraOffset = { x: 0, y: 0 };
@@ -28,7 +29,8 @@ function gameLoop(timestamp) {
         lastFpsUpdate = timestamp;
     }
     
-    const deltaTime = Math.min(0.1, (timestamp - lastTime) / 1000);
+    let deltaTime = Math.min(0.1, (timestamp - lastTime) / 1000);
+    if (isGamePaused || !player.isAlive) deltaTime = 0;
     lastTime = timestamp;
 
     // Actualizar elementos
@@ -97,6 +99,7 @@ function startGame() {
     cameraOffset = { x: player.x - cameraSettings.offsetX, y: 0 }; // Reset cámara
     lastTime = performance.now();
     lastFpsUpdate = performance.now();
+    isGamePaused = false; // Asegurarse de que el juego no está pausado
     requestAnimationFrame(gameLoop);
 }
 
