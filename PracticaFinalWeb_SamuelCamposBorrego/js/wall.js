@@ -5,33 +5,35 @@ const walls = {
     speed: 180,
     nextWallX: 0,
     lastPosition: 'bottom',
+    initialGap: 300,
 
     init: function() {
         this.list = [];
-        this.nextWallX = canvas.width;
+        this.nextWallX = canvas.width + this.initialGap;
         this.lastPosition = 'bottom';
+        this.spacing = 300;
+        
+        this.generateWall();
     },
 
     update: function(deltaTime) {
-        // Mover paredes
         this.list.forEach(wall => {
             wall.x -= this.speed * deltaTime;
         });
 
-        // Eliminar fuera de pantalla
         this.list = this.list.filter(wall => wall.x + this.width > -this.width);
 
-        // Dificultad progresiva
         const difficulty = Math.min(1, player.currentSpeed / player.baseSpeed);
         this.spacing = 300 - (difficulty * 100);
 
-        // Generar nuevas
         if (this.nextWallX - player.x < canvas.width * 1.5) {
             this.generateWall();
         }
     },
 
     generateWall: function() {
+        const currentSpacing = this.list.length < 2 ? this.initialGap : this.spacing;
+        
         const position = Math.random() > 0.7 ? 
                        (this.lastPosition === 'top' ? 'bottom' : 'top') : 
                        this.lastPosition;
@@ -48,7 +50,7 @@ const walls = {
             position: position
         });
 
-        this.nextWallX += this.width + this.spacing;
+        this.nextWallX += this.width + currentSpacing;
     },
 
     draw: function() {
@@ -92,7 +94,7 @@ function gameOver() {
     setTimeout(() => {
         alert(`¡Game Over! Puntuación: ${score}`);
         isGamePaused = false;
-        menuActive = true; // Volver al menú
-        loopMenu(); // Mostrar el menú principal
+        menuActive = true;
+        loopMenu();
     }, 300);
 }

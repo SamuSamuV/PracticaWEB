@@ -1,6 +1,9 @@
 const playerSprite = new Image();
 playerSprite.src = "sprites/Character_Anim.png";
 
+const teleportSound = new Audio("sounds/teleport_sound.mp3");
+teleportSound.volume = 0.3;
+
 const player = {
     x: 100,
     y: canvas.height - 70,
@@ -12,9 +15,8 @@ const player = {
     isOnTop: false,
     isAlive: true,
 
-    
     reset: function() {
-        this.x = 100; // Posición inicial fija
+        this.x = 100;
         this.y = canvas.height - 70;
         this.currentSpeed = this.baseSpeed;
         this.isOnTop = false;
@@ -30,7 +32,6 @@ const player = {
     draw: function(deltaTime) {
         if (!this.isAlive) return;
 
-        // Animación de frame
         frameTimer += deltaTime * 1000;
         if (frameTimer >= FRAME_DURATION) {
             frameTimer = 0;
@@ -41,20 +42,14 @@ const player = {
         const row = Math.floor(currentFrame / SPRITE_COLS);
 
         ctx.save();
-
-        // Centro del sprite
         const centerX = this.x + this.width / 2;
         const centerY = this.y + this.height / 2;
-
-        // Mover origen al centro
         ctx.translate(centerX, centerY);
 
         if (this.isOnTop) {
-            // Solo giro 180º (volteo vertical)
             ctx.scale(1, -1);
         }
 
-        // Dibujo desde el centro corregido
         ctx.drawImage(
             playerSprite,
             col * FRAME_WIDTH, row * FRAME_HEIGHT,
@@ -69,10 +64,11 @@ const player = {
     jump: function() {
         if (!this.isAlive) return;
         
-        this.isOnTop = !this.isOnTop;
-        this.y = this.isOnTop ? 0 : canvas.height - this.height - 0;
-
+        teleportSound.currentTime = 0;
+        teleportSound.play().catch(e => console.log("Error sonido salto:", e));
         
+        this.isOnTop = !this.isOnTop;
+        this.y = this.isOnTop ? 0 : canvas.height - this.height;
     },
 
     getBounds: function() {

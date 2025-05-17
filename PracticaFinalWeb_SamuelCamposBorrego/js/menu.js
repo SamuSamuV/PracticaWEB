@@ -73,14 +73,12 @@ function drawParticles() {
 
 // Dibujar menú
 function drawMenu() {
-    // Fondo con gradiente
     const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
     gradient.addColorStop(0, "#001a33");
     gradient.addColorStop(1, "#003366");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Partículas
     drawParticles();
 
     if (inOptions) {
@@ -91,7 +89,6 @@ function drawMenu() {
 }
 
 function drawMainMenu() {
-    // Título
     ctx.fillStyle = "#4AF";
     ctx.font = '36px "Press Start 2P"';
     ctx.textAlign = "center";
@@ -100,19 +97,13 @@ function drawMainMenu() {
     ctx.fillText("TapP", canvas.width/2, 100);
     ctx.shadowBlur = 0;
 
-    // Botones
     ctx.font = '14px "Press Start 2P"';
     buttons.forEach(btn => {
-        // Fondo del botón
         ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
         ctx.fillRect(btn.x, btn.y, btn.width, btn.height);
-        
-        // Borde
         ctx.strokeStyle = "#000";
         ctx.lineWidth = 2;
         ctx.strokeRect(btn.x, btn.y, btn.width, btn.height);
-        
-        // Texto
         ctx.fillStyle = "#000";
         ctx.textAlign = "center";
         ctx.fillText(btn.text, btn.x + btn.width/2, btn.y + 25);
@@ -120,33 +111,26 @@ function drawMainMenu() {
 }
 
 function drawOptionsMenu() {
-    // Fondo semitransparente
     ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Título
     ctx.fillStyle = "#FFF";
     ctx.font = '24px "Press Start 2P"';
     ctx.textAlign = "center";
     ctx.fillText("OPCIONES", canvas.width/2, 80);
 
-    // Control de volumen
     ctx.font = '14px "Press Start 2P"';
     ctx.textAlign = "left";
     ctx.fillText("VOLUMEN:", volumeBar.x, volumeBar.y - 15);
 
-    // Barra de volumen
     ctx.fillStyle = "#444";
     ctx.fillRect(volumeBar.x, volumeBar.y, volumeBar.width, volumeBar.height);
-    
     ctx.fillStyle = "#4AF";
     ctx.fillRect(volumeBar.x, volumeBar.y, volumeBar.width * volume, volumeBar.height);
-    
     ctx.strokeStyle = "#000";
     ctx.lineWidth = 2;
     ctx.strokeRect(volumeBar.x, volumeBar.y, volumeBar.width, volumeBar.height);
 
-    // Botón volver
     ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
     ctx.fillRect(canvas.width/2 - 100, 300, 200, 40);
     ctx.strokeStyle = "#000";
@@ -156,22 +140,25 @@ function drawOptionsMenu() {
     ctx.fillText("VOLVER", canvas.width/2, 325);
 }
 
-// Bucle del menú
 function loopMenu() {
     if (!menuActive) return;
 
-    // Actualizar partículas
     if (Math.random() < 0.3) createParticle();
     updateParticles();
 
-    // Dibujar
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     drawMenu();
 
     requestAnimationFrame(loopMenu);
 }
 
-// Eventos del ratón
+// Control de volumen
+function updateVolume(mouseX) {
+    volume = Math.max(0, Math.min(1, (mouseX - volumeBar.x) / volumeBar.width));
+    if (backgroundMusic) backgroundMusic.volume = volume;
+    if (teleportSound) teleportSound.volume = volume;
+}
+
 canvas.addEventListener("mousedown", function(evt) {
     const rect = canvas.getBoundingClientRect();
     const pos = {
@@ -180,20 +167,17 @@ canvas.addEventListener("mousedown", function(evt) {
     };
 
     if (inOptions) {
-        // Control de volumen
         if (pos.x >= volumeBar.x && pos.x <= volumeBar.x + volumeBar.width &&
             pos.y >= volumeBar.y && pos.y <= volumeBar.y + volumeBar.height) {
             isDraggingVolume = true;
             updateVolume(pos.x);
         }
         
-        // Botón volver
         if (pos.x >= canvas.width/2 - 100 && pos.x <= canvas.width/2 + 100 &&
             pos.y >= 300 && pos.y <= 340) {
             inOptions = false;
         }
     } else {
-        // Botones del menú
         buttons.forEach(btn => {
             if (pos.x >= btn.x && pos.x <= btn.x + btn.width &&
                 pos.y >= btn.y && pos.y <= btn.y + btn.height) {
@@ -213,11 +197,6 @@ canvas.addEventListener("mousemove", function(evt) {
 canvas.addEventListener("mouseup", function() {
     isDraggingVolume = false;
 });
-
-function updateVolume(mouseX) {
-    volume = Math.max(0, Math.min(1, (mouseX - volumeBar.x) / volumeBar.width));
-    console.log("Volumen:", volume.toFixed(2));
-}
 
 function showOptions() {
     inOptions = true;
